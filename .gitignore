@@ -1,41 +1,74 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ============================================
+# CLÉS SECRÈTES — JAMAIS SUR GITHUB
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# ============================================
+# NODE_MODULES (Vercel les réinstalle auto)
+# ============================================
+node_modules/
 
-# testing
-/coverage
+# ============================================
+# DOSSIERS DE BUILD (générés automatiquement)
+# ============================================
+.next/
+out/
+dist/
+build/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# ============================================
+# LOGS
+# ============================================
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ============================================
+# FICHIERS SYSTÈME
+# ============================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
-# vercel
-.vercel
+# ============================================
+# IDE / ÉDITEURS
+# ============================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ============================================
+# TESTS
+# ============================================
+coverage/
+.nyc_output/
+
+# ============================================
+# BASE DE DONNÉES LOCALES
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# IMAGES UPLOADÉES PAR LES UTILISATEURS
+# ============================================
+public/uploads/
+uploads/
+
+# ============================================
+# CLÉS / CERTIFICATS
+# ============================================
+*.pem
+*.key
+*.crt
+*.p12
+
+prisma/seed.ts

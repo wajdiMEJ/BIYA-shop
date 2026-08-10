@@ -1,0 +1,113 @@
+/* ============================================
+   BIYA THEME - Couleurs personnalisées
+   ============================================ */
+
+/* ----- BODY & FONDS ----- */
+body {
+  background-color: #EEE6D8 !important;
+  color: #3E3125 !important;
+}
+
+.bg-light {
+  background-color: #F8F5EF !important;
+}
+
+/* ----- TEXTES ----- */
+.text-success,
+.text-dark {
+  color: #3E3125 !important;
+}
+
+.text-muted {
+  color: #6F4E37 !important;
+}
+
+/* ----- BOUTONS ----- */
+.btn-success {
+  background-color: #6F4E37 !important;
+  border-color: #6F4E37 !important;
+  color: #F8F5EF !important;
+}
+
+.btn-success:hover {
+  background-color: #5A3E2B !important;
+  border-color: #5A3E2B !important;
+}
+
+/* ----- HEADER & NAV ----- */
+.navbar-light {
+  background-color: #F8F5EF !important;
+}
+
+.nav-link {
+  color: #3E3125 !important;
+}
+
+.nav-link:hover {
+  color: #B8895A !important;
+}
+
+/* ----- FOOTER ----- */
+.bg-dark,
+#tempaltemo_footer {
+  background-color: #3E3125 !important;
+}
+
+#tempaltemo_footer .text-success {
+  color: #B8895A !important;
+}
+
+/* ----- CARDS & BORDURES ----- */
+.card {
+  background-color: #F8F5EF !important;
+  border-color: #D8CBB8 !important;
+}
+
+.border {
+  border-color: #D8CBB8 !important;
+}
+
+/* ----- INPUTS ----- */
+.form-control {
+  background-color: #F8F5EF !important;
+  border-color: #D8CBB8 !important;
+  color: #3E3125 !important;
+}
+
+/* ----- LIENS ----- */
+a {
+  color: #6F4E37;
+}
+
+a:hover {
+  color: #B8895A;
+}
+
+/* ----- PAGINATION ----- */
+.page-link {
+  color: #3E3125 !important;
+  background-color: #F8F5EF !important;
+  border-color: #D8CBB8 !important;
+}
+
+.page-item.active .page-link {
+  background-color: #6F4E37 !important;
+  border-color: #6F4E37 !important;
+  color: #F8F5EF !important;
+}
+
+/* ----- BADGES ----- */
+.badge.bg-light {
+  background-color: #B8895A !important;
+  color: #F8F5EF !important;
+}
+
+/* ----- TOP NAV (barre noire) ----- */
+#templatemo_nav_top {
+  background-color: #3E3125 !important;
+}
+
+/* ----- LOGO ----- */
+.logo {
+  color: #6F4E37 !important;
+}
