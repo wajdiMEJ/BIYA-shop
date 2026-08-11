@@ -92,7 +92,7 @@ model Product {
   slug             String   @unique
   description      String?
   price            Decimal  @db.Decimal(10, 2)
-  comparePrice     Decimal? @db.Decimal(10, 2)
+  salePrice        Decimal? @db.Decimal(10, 2)   // ← REMPLACÉ : comparePrice → salePrice
   saleStartDate    DateTime?
   saleEndDate      DateTime?
   sku              String   @unique

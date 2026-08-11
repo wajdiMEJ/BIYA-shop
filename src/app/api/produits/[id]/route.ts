@@ -1,107 +1,80 @@
 import { prisma } from "@/lib/db/prisma"
 import { NextResponse } from "next/server"
+import { notifyNewProduct } from "@/lib/email"
+import { z } from "zod"
 
-// GET /api/produits/123 → Détail d'un produit
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const productSchema = z.object({
+  name: z.string().min(1).max(200).trim(),
+  slug: z.string().min(1).max(200).trim(),
+  description: z.string().max(2000).optional(),
+  price: z.number().positive(),
+  salePrice: z.number().positive().optional(),
+  stock: z.number().int().min(0),
+  sku: z.string().min(1).max(100),
+  categoryId: z.string().uuid(),
+  imageUrl: z.string().url().optional(),
+})
+
+export async function POST(request: Request) {
   try {
-    const { id } = await params
+    const body = await request.json()
+    const result = productSchema.safeParse(body)
 
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        images: true,
-        variants: true,
-        category: true,
-        reviews: true,
-      },
-    })
-
-    if (!product) {
-      return NextResponse.json(
-        { error: "Produit non trouvé" },
-        { status: 404 }
-      )
+    if (!result.success) {
+      return NextResponse.json({ error: "Données invalides" }, { status: 400 })
     }
 
-    return NextResponse.json(product)
-  } catch (error) {
-    console.error("Erreur GET produit :", error)
+    const data = result.data
 
-    return NextResponse.json(
-      { error: "Erreur chargement produit" },
-      { status: 500 }
-    )
-  }
-}
-
-// PUT /api/produits/123 → Modifier un produit
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const body = await request.json()
-
-    const product = await prisma.product.update({
-      where: { id },
+    const product = await prisma.product.create({
       data: {
-        name: body.name,
-        slug: body.slug,
-        description: body.description,
-        price: body.price,
-        stock: body.stock,
-        sku: body.sku,
-        categoryId: body.categoryId,
-        isActive: body.isActive,
-      },
-      include: {
-        images: true,
-        category: true,
-      },
+        name: data.name,
+        slug: data.slug,
+        description: data.description,
+        price: data.price,
+        salePrice: data.salePrice || null,
+        stock: data.stock,
+        sku: data.sku,
+        categoryId: data.categoryId,
+        isActive: true,
+        images: {
+          create: {
+            url: data.imageUrl || '/assets/img/placeholder.jpg',
+            isPrimary: true,
+            alt: data.name,
+          }
+        }
+      }
     })
 
-    return NextResponse.json(product)
-  } catch (error) {
-    console.error("Erreur PUT produit :", error)
+    const users = await prisma.user.findMany({
+      where: { role: 'USER' },
+      select: { email: true }
+    })
 
-    return NextResponse.json(
-      { error: "Erreur modification produit" },
-      { status: 500 }
-    )
+    users.forEach(user => {
+      if (user.email) {
+        notifyNewProduct(user.email, data.name).catch(console.error)
+      }
+    })
+
+    return NextResponse.json(product, { status: 201 })
+
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: "Erreur création" }, { status: 500 })
   }
 }
 
-// DELETE /api/produits/123 → Supprimer un produit
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET() {
   try {
-    const { id } = await params
-
-    // Supprimer les images liées au produit
-    await prisma.productImage.deleteMany({
-      where: { productId: id },
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      include: { images: true, category: true },
+      orderBy: { createdAt: 'desc' }
     })
-
-    // Supprimer le produit
-    await prisma.product.delete({
-      where: { id },
-    })
-
-    return NextResponse.json({
-      message: "Produit supprimé",
-    })
+    return NextResponse.json(products)
   } catch (error) {
-    console.error("Erreur DELETE produit :", error)
-
-    return NextResponse.json(
-      { error: "Erreur suppression" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Erreur chargement" }, { status: 500 })
   }
 }
