@@ -21,7 +21,7 @@ export default async function NewProductPage() {
     const price = parseFloat(formData.get('price') as string)
     const discountPercentRaw = formData.get('discountPercent') as string
     const discountPercent = discountPercentRaw && discountPercentRaw.trim() !== '' ? parseFloat(discountPercentRaw) : 0
-    const comparePrice = discountPercent > 0 ? price * (1 - discountPercent / 100) : null
+    const salePrice = discountPercent > 0 ? price * (1 - discountPercent / 100) : null
 
     const saleStartRaw = formData.get('saleStartDate') as string
     const saleEndRaw = formData.get('saleEndDate') as string
@@ -105,7 +105,7 @@ export default async function NewProductPage() {
         slug,
         description,
         price,
-        comparePrice,
+        salePrice,
         saleStartDate,
         saleEndDate,
         stock: totalStock,

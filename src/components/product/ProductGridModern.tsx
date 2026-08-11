@@ -8,7 +8,7 @@ interface Product {
   name: string
   slug: string
   price: number
-  comparePrice?: number | null
+  salePrice?: number | null
   saleStartDate?: string | null
   saleEndDate?: string | null
   images: { url: string }[]
@@ -25,7 +25,7 @@ export default function ProductGridModern({ products, title }: { products: Produ
         {products.map((product) => {
           const imageUrl = product.images?.[0]?.url || '/assets/img/placeholder.jpg'
           const price = Number(product.price)
-          const comparePrice = product.comparePrice != null ? Number(product.comparePrice) : null
+          const salePrice = product.salePrice != null ? Number(product.salePrice) : null
 
           const now = new Date()
           const saleStart = product.saleStartDate ? new Date(product.saleStartDate) : null
@@ -35,9 +35,9 @@ export default function ProductGridModern({ products, title }: { products: Produ
             (!saleStart || now >= saleStart) && 
             (!saleEnd || now <= saleEnd)
 
-          const isOnSale = comparePrice !== null && comparePrice < price && isWithinSalePeriod
+          const isOnSale = salePrice !== null && salePrice < price && isWithinSalePeriod
           const discountPercent = isOnSale 
-            ? Math.round((1 - comparePrice! / price) * 100) 
+            ? Math.round((1 - salePrice! / price) * 100) 
             : 0
           
           return (
@@ -104,7 +104,7 @@ export default function ProductGridModern({ products, title }: { products: Produ
                             className="fw-bold"
                             style={{ color: '#dc2626', fontSize: 18 }}
                           >
-                            {comparePrice!.toFixed(2)} DT
+                            {salePrice!.toFixed(2)} DT
                           </span>
                         </>
                       ) : (

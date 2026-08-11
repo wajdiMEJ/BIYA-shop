@@ -5,5 +5,5 @@
 
 */
 -- AlterTable
-ALTER TABLE "Product" DROP COLUMN "comparePrice",
+ALTER TABLE "Product" DROP COLUMN "salePrice",
 ADD COLUMN     "salePrice" DECIMAL(10,2);

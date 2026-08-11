@@ -84,7 +84,7 @@ export default async function HomePage() {
             products={featuredProducts.map(p => ({ 
               ...p, 
               price: Number(p.price),
-              comparePrice: p.comparePrice ? Number(p.comparePrice) : null,
+              salePrice: p.salePrice ? Number(p.salePrice) : null,
               saleStartDate: p.saleStartDate ? p.saleStartDate.toISOString() : null,
               saleEndDate: p.saleEndDate ? p.saleEndDate.toISOString() : null,
             }))} 

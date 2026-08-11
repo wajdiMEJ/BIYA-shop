@@ -1,60 +1,44 @@
-import { prisma } from "@/lib/db/prisma"
-import { notFound } from "next/navigation"
-import TopNav from "@/components/TopNav"
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
-import ProductGallery from "@/components/product/ProductGallery"
-import ProductDetailClient from "@/components/product/ProductDetailClient"
+import { prisma } from '@/lib/db/prisma'
+import TopNav from '@/components/TopNav'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import ProductDetailClient from '@/components/product/ProductDetailClient'
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-
-  if (!slug) {
-    notFound()
-  }
-
+export default async function ProductPage({ params }: { params: { slug: string } }) {
   const product = await prisma.product.findUnique({
-    where: { slug },
-    include: { 
-      images: { orderBy: { sortOrder: 'asc' } }, 
-      variants: true, 
-      category: true 
-    }
+    where: { slug: params.slug, isActive: true },
+    include: { images: true, category: true, variants: true, reviews: true },
   })
 
   if (!product) {
-    notFound()
+    return (
+      <>
+        <TopNav />
+        <Header />
+        <div className="container py-5 text-center">
+          <h2 style={{ color: '#3E3125' }}>Produit non trouvé</h2>
+        </div>
+        <Footer />
+      </>
+    )
   }
 
-  const productClean = {
+  const serializedProduct = {
     ...product,
     price: Number(product.price),
-    comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+    salePrice: product.salePrice ? Number(product.salePrice) : null,   // ← CORRIGÉ
     saleStartDate: product.saleStartDate ? product.saleStartDate.toISOString() : null,
     saleEndDate: product.saleEndDate ? product.saleEndDate.toISOString() : null,
     weight: product.weight ? Number(product.weight) : null,
-    variants: product.variants.map(v => ({
-      ...v,
-      stock: v.stock
-    }))
   }
 
   return (
     <>
       <TopNav />
       <Header />
-      
       <div className="container py-5">
-        <div className="row g-5">
-          <div className="col-lg-6">
-            <ProductGallery images={productClean.images} name={productClean.name} />
-          </div>
-          <div className="col-lg-6">
-            <ProductDetailClient product={productClean} />
-          </div>
-        </div>
+        <ProductDetailClient product={serializedProduct} />
       </div>
-      
       <Footer />
     </>
   )

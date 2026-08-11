@@ -31,7 +31,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     const price = parseFloat(formData.get('price') as string)
     const discountPercentRaw = formData.get('discountPercent') as string
     const discountPercent = discountPercentRaw && discountPercentRaw.trim() !== '' ? parseFloat(discountPercentRaw) : 0
-    const comparePrice = discountPercent > 0 ? price * (1 - discountPercent / 100) : null
+    const salePrice = discountPercent > 0 ? price * (1 - discountPercent / 100) : null
 
     const saleStartRaw = formData.get('saleStartDate') as string
     const saleEndRaw = formData.get('saleEndDate') as string
@@ -138,7 +138,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         slug,
         description,
         price,
-        comparePrice,
+        salePrice,
         saleStartDate,
         saleEndDate,
         stock: totalStock,
@@ -194,8 +194,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             </label>
             <input name="discountPercent" type="number" step="1" min="0" max="99" className="form-control"
               defaultValue={
-                product.comparePrice && product.price
-                  ? Math.round((1 - Number(product.comparePrice) / Number(product.price)) * 100).toString()
+                product.salePrice && product.price
+                  ? Math.round((1 - Number(product.salePrice) / Number(product.price)) * 100).toString()
                   : ''
               }
               placeholder="Ex: 15 pour -15%"

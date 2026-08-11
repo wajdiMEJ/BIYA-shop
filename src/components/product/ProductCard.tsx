@@ -10,7 +10,7 @@ interface ProductCardProps {
     name: string
     slug: string
     price: number
-    comparePrice?: number | null
+    salePrice?: number | null
     stock: number
     images: { url: string; isPrimary: boolean }[]
   }
@@ -18,7 +18,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const imageUrl = product.images.find(img => img.isPrimary)?.url || product.images[0]?.url || '/assets/img/placeholder.jpg'
-  const hasDiscount = product.comparePrice && product.comparePrice > product.price
+  const hasDiscount = product.salePrice && product.salePrice < product.price
   const isOutOfStock = product.stock === 0
   const isLowStock = product.stock > 0 && product.stock <= 5
 
@@ -41,7 +41,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
           {hasDiscount && !isOutOfStock && (
             <span className="absolute top-3 left-3 text-white text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: '#B8895A' }}>
-              -{Math.round(((product.comparePrice! - product.price) / product.comparePrice!) * 100)}%
+              -{Math.round(((product.salePrice! - product.price) / product.salePrice!) * 100)}%
             </span>
           )}
         </div>
@@ -55,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg font-bold" style={{ color: '#3E3125' }}>{product.price.toFixed(2)} DT</span>
           {hasDiscount && (
-            <span className="text-sm line-through" style={{ color: '#6F4E37' }}>{product.comparePrice!.toFixed(2)} DT</span>
+            <span className="text-sm line-through" style={{ color: '#6F4E37' }}>{product.salePrice!.toFixed(2)} DT</span>
           )}
         </div>
 

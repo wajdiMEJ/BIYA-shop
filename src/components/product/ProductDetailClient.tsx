@@ -42,12 +42,12 @@ export default function ProductDetailClient({ product }: { product: any }) {
     (!saleStart || now >= saleStart) && 
     (!saleEnd || now <= saleEnd)
 
-  const isOnSale = Boolean(product.comparePrice) && 
-    Number(product.comparePrice) < Number(product.price) && 
+  const isOnSale = Boolean(product.salePrice) && 
+    Number(product.salePrice) < Number(product.price) && 
     isWithinSalePeriod
 
   // Prix final à utiliser (soldé si applicable, sinon normal)
-  const finalPrice = isOnSale ? product.comparePrice : product.price
+  const finalPrice = isOnSale ? product.salePrice : product.price
 
   const handleSizeClick = (size: string) => {
     const stock = getVariantStock(size)
@@ -151,7 +151,7 @@ export default function ProductDetailClient({ product }: { product: any }) {
               className="fw-bold"
               style={{ color: '#dc2626', fontSize: '1.8rem' }}
             >
-              {product.comparePrice.toFixed(2)} DT
+              {product.salePrice.toFixed(2)} DT
             </span>
             <span 
               className="fw-bold px-2 py-1 text-white"
