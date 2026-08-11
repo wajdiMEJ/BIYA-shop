@@ -15,7 +15,7 @@ export default async function Footer() {
             <h2 className="h2 border-bottom pb-3 border-light logo" style={{ color: '#B8895A' }}>BIYA</h2>
             <ul className="list-unstyled text-light footer-link-list">
               <li><i className="fas fa-map-marker-alt fa-fw"></i> Grombalia,Nabeul</li>
-              <li><i className="fa fa-phone fa-fw"></i> <a className="text-decoration-none" href="tel:010-020-0340" style={{ color: '#EEE6D8' }}>27055521</a></li>
+              <li><i className="fa fa-phone fa-fw"></i> <a className="text-decoration-none" href="tel:27055521" style={{ color: '#EEE6D8' }}>27055521</a></li>
               <li><i className="fa fa-envelope fa-fw"></i> <a className="text-decoration-none" href="mailto:info@biya.com" style={{ color: '#EEE6D8' }}>BiYaShop4you@gmail.com</a></li>
             </ul>
           </div>

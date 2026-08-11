@@ -47,6 +47,11 @@ export default async function AdminLayout({
                 </Link>
               </li>
               <li className="mb-3">
+  <Link href="/admin/banners" style={{ color: '#EEE6D8', textDecoration: 'none' }}>
+    🖼️ Bannières
+  </Link>
+</li>
+              <li className="mb-3">
                 <Link href="/" style={{ color: '#B8895A', textDecoration: 'none' }}>
                   🏠 Voir le site
                 </Link>
