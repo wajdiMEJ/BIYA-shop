@@ -12,12 +12,34 @@ export default function Header() {
     <nav className="navbar navbar-expand-lg navbar-light shadow" style={{ backgroundColor: '#F8F5EF' }}>
       <div className="container d-flex justify-content-between align-items-center">
         <Link 
-          className="navbar-brand text-success logo h1 align-self-center" 
+          className="navbar-brand align-self-center text-decoration-none" 
           href="/" 
-          style={{ color: '#59ab6e' }}
         >
-          <span style={{ color: '#6F4E37' }}>BI</span>
-          <span style={{ color: '#B8895A' }} suppressHydrationWarning>YA </span>
+          <div style={{ lineHeight: 1.1 }}>
+            <div 
+              style={{ 
+                fontFamily: "'Brush Script MT', cursive", 
+                fontSize: 32, 
+                color: '#3E3125',
+                borderBottom: '1.5px solid #3E3125',
+                paddingBottom: 2,
+                display: 'inline-block'
+              }}
+            >
+              Biya
+            </div>
+            <div 
+              style={{ 
+                fontSize: 11, 
+                letterSpacing: 3, 
+                color: '#3E3125',
+                textAlign: 'right',
+                marginTop: -2
+              }}
+            >
+              BY MARROU
+            </div>
+          </div>
         </Link>
 
         <div className="d-flex align-items-center gap-3">

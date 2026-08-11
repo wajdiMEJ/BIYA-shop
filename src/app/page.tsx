@@ -13,11 +13,6 @@ export default async function HomePage() {
     orderBy: { createdAt: 'desc' },
   })
 
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    take: 3,
-  })
-
   const banners = await prisma.banner.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: 'asc' },
@@ -82,26 +77,6 @@ export default async function HomePage() {
           </a>
         </div>
       )}
-
-      <section className="container py-5">
-        <div className="row text-center pt-3">
-          <div className="col-lg-6 m-auto">
-            <h1 className="h1">Categories du Mois</h1>
-            <p>Explorez nos categories les plus populaires.</p>
-          </div>
-        </div>
-        <div className="row">
-          {categories.map((cat) => (
-            <div className="col-12 col-md-4 p-5 mt-3" key={cat.id}>
-              <Link href={`/produits?category=${cat.slug}`}>
-                <img src={cat.image || '/assets/img/category_img_01.jpg'} className="rounded-circle img-fluid border" alt={cat.name} />
-              </Link>
-              <h5 className="text-center mt-3 mb-3">{cat.name}</h5>
-              <p className="text-center"><Link className="btn btn-success" href={`/produits?category=${cat.slug}`}>Voir</Link></p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section style={{ backgroundColor: '#EEE6D8' }}>
         <div className="container py-5">
