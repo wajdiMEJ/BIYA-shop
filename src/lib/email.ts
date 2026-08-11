@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Gmail pour l'admin (pas de restriction)
+// Gmail pour l'admin
 const gmailTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -153,11 +153,40 @@ function customerEmailTemplate(data: OrderData) {
   `
 }
 
-// ✅ ADMIN : Gmail (pas de restriction Resend)
+function newProductEmailTemplate(productName: string) {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#F8F5EF;border-radius:20px;overflow:hidden;border:1px solid #D8CBB8;">
+      <div style="background:#3E3125;padding:32px 24px;text-align:center;">
+        <h1 style="color:#F8F5EF;margin:0;font-size:26px;letter-spacing:2px;">BIYA</h1>
+        <p style="color:#B8895A;margin:8px 0 0;font-size:14px;">Boutique de Mode</p>
+      </div>
+      <div style="padding:32px 24px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">✨</div>
+        <h2 style="color:#3E3125;margin:0 0 8px;font-size:22px;">Nouvelle arrivée !</h2>
+        <p style="color:#6F4E37;margin:0;font-size:15px;line-height:1.6;">
+          Bonjour,<br><br>
+          Un nouveau produit vient d'arriver dans notre boutique :
+        </p>
+        <div style="background:#fff;border-radius:12px;padding:20px;margin:20px 0;border:1px solid #D8CBB8;">
+          <h3 style="color:#3E3125;margin:0;font-size:20px;">${productName}</h3>
+          <p style="color:#6F4E37;margin:8px 0 0;font-size:14px;">Découvrez-le dès maintenant !</p>
+        </div>
+        <a href="https://biya-shop.vercel.app/produits" style="display:inline-block;background:#6F4E37;color:#F8F5EF;padding:14px 32px;border-radius:50;text-decoration:none;font-weight:bold;font-size:15px;margin-top:8px;">
+          Voir le produit →
+        </a>
+      </div>
+      <div style="background:#3E3125;padding:20px;text-align:center;">
+        <p style="color:#F8F5EF;margin:0 0 8px;font-size:14px;">Merci de votre fidélité</p>
+        <p style="color:#B8895A;margin:0;font-size:12px;">BIYA Shop</p>
+      </div>
+    </div>
+  `
+}
+
+// ✅ ADMIN : Gmail
 export async function sendAdminOrderNotification(data: OrderData) {
   try {
     console.log('📧 [ADMIN Gmail] Envoi à:', ADMIN_EMAIL)
-    
     await gmailTransporter.sendMail({
       from: `"BIYA Shop" <${process.env.EMAIL_USER}>`,
       to: ADMIN_EMAIL,
@@ -165,18 +194,16 @@ export async function sendAdminOrderNotification(data: OrderData) {
       subject: `🛒 Nouvelle commande ${data.orderNumber}`,
       html: adminEmailTemplate(data),
     })
-    
-    console.log('✅ [ADMIN Gmail] Email envoyé avec succès')
+    console.log('✅ [ADMIN Gmail] Email envoyé')
   } catch (error: any) {
     console.error('❌ [ADMIN Gmail] Erreur:', error?.message || error)
   }
 }
 
-// ✅ CLIENT : Resend (arrive dans la boîte de réception)
+// ✅ CLIENT : Resend
 export async function sendCustomerConfirmation(data: OrderData) {
   try {
     console.log('📧 [CLIENT Resend] Envoi à:', data.email)
-    
     const result = await resend.emails.send({
       from: `BIYA Shop <${EMAIL_FROM}>`,
       to: data.email,
@@ -184,9 +211,22 @@ export async function sendCustomerConfirmation(data: OrderData) {
       subject: `Votre commande ${data.orderNumber} est confirmée`,
       html: customerEmailTemplate(data),
     })
-    
     console.log('✅ [CLIENT Resend] Email envoyé:', result)
   } catch (error: any) {
     console.error('❌ [CLIENT Resend] Erreur:', error?.message || error)
+  }
+}
+
+// ✅ NOTIFICATION NOUVEAU PRODUIT (pour l'API)
+export async function notifyNewProduct(email: string, productName: string) {
+  try {
+    await resend.emails.send({
+      from: `BIYA Shop <${EMAIL_FROM}>`,
+      to: email,
+      subject: `✨ Nouveau produit chez BIYA : ${productName}`,
+      html: newProductEmailTemplate(productName),
+    })
+  } catch (error: any) {
+    console.error('❌ [Notify] Erreur:', error?.message || error)
   }
 }
