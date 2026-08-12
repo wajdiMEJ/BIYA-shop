@@ -1,14 +1,11 @@
 import { prisma } from "@/lib/db/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { writeFile } from "fs/promises"
-import { mkdir } from "fs/promises"
-import path from "path"
+import cloudinary from "@/lib/cloudinary"
 
 export default async function NewProductPage() {
   const categories = await prisma.category.findMany()
 
-  // Date/heure actuelle au format datetime-local (YYYY-MM-DDTHH:mm) pour l'attribut min
   const now = new Date()
   const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
 
@@ -34,7 +31,6 @@ export default async function NewProductPage() {
 
       if (saleStartRaw) {
         const start = new Date(saleStartRaw)
-        // 🛡️ Empêche une date de début dans le passé
         if (start < nowCheck) {
           throw new Error("La date de début de la promo ne peut pas être dans le passé")
         }
@@ -55,7 +51,7 @@ export default async function NewProductPage() {
 
     const categoryId = formData.get('categoryId') as string
     const sku = formData.get('sku') as string
-    
+
     const sizes = ['XS', 'S', 'M', 'L', 'XL']
     const variants = sizes.map(size => ({
       size,
@@ -64,24 +60,26 @@ export default async function NewProductPage() {
       color: 'Standard'
     }))
 
+    // ✅ UPLOAD CLOUDINARY (utilise ton export existant)
     const files = formData.getAll('images') as File[]
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products')
-    await mkdir(uploadDir, { recursive: true })
-
     const imageUrls: { url: string; isPrimary: boolean; alt: string; sortOrder: number }[] = []
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       if (file.size === 0) continue
-      
+
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`
-      const filepath = path.join(uploadDir, filename)
-      await writeFile(filepath, buffer)
-      
+      const base64 = buffer.toString('base64')
+      const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`
+
+      const result = await cloudinary.uploader.upload(dataUri, {
+        folder: 'biya-shop/products',
+        public_id: `${Date.now()}-${file.name.replace(/\s/g, '-').replace(/\.[^/.]+$/, '')}`,
+      })
+
       imageUrls.push({
-        url: `/uploads/products/${filename}`,
+        url: result.secure_url,
         isPrimary: i === 0,
         alt: name,
         sortOrder: i
@@ -167,7 +165,6 @@ export default async function NewProductPage() {
               style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }} />
           </div>
 
-          {/* Dates + heures de la promotion */}
           <div className="col-md-6 mb-3">
             <label className="form-label fw-bold">
               Début de la promo <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- optionnel</span>

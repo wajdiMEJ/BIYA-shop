@@ -4,9 +4,11 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ProductDetailClient from '@/components/product/ProductDetailClient'
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params  // ← await ici
+
   const product = await prisma.product.findUnique({
-    where: { slug: params.slug, isActive: true },
+    where: { slug, isActive: true },
     include: { images: true, category: true, variants: true, reviews: true },
   })
 
@@ -26,7 +28,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const serializedProduct = {
     ...product,
     price: Number(product.price),
-    salePrice: product.salePrice ? Number(product.salePrice) : null,   // ← CORRIGÉ
+    salePrice: product.salePrice ? Number(product.salePrice) : null,
     saleStartDate: product.saleStartDate ? product.saleStartDate.toISOString() : null,
     saleEndDate: product.saleEndDate ? product.saleEndDate.toISOString() : null,
     weight: product.weight ? Number(product.weight) : null,
