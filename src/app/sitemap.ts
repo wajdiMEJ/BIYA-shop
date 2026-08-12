@@ -4,15 +4,21 @@ import { MetadataRoute } from "next"
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://biya-shop.vercel.app"
 
-  const products = await prisma.product.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true }
-  })
+  let productUrls: MetadataRoute.Sitemap = []
 
-  const productUrls = products.map((product) => ({
-    url: `${baseUrl}/produits/${product.slug}`,
-    lastModified: product.updatedAt,
-  }))
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true }
+    })
+
+    productUrls = products.map((product) => ({
+      url: `${baseUrl}/produits/${product.slug}`,
+      lastModified: product.updatedAt,
+    }))
+  } catch (error) {
+    console.error("Erreur chargement produits pour sitemap:", error)
+  }
 
   return [
     {
