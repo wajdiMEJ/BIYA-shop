@@ -12,9 +12,10 @@ export const metadata: Metadata = {
   title: 'BIYA - Boutique de Mode',
   description: 'Decouvrez notre collection de vetements tendance',
   verification: {
-    google: '8UtONa8KQR74E4GVlwgvBYu5nyA0o6-9cjasVlrfNzA', // ← remplace par le vrai code que Google t'a donné (juste la valeur du "content", pas toute la balise)
+    google: '8UtONa8KQR74E4GVlwgvBYu5ncjasVlrfNzA',
   },
 }
+
 
 export default function RootLayout({
   children,
