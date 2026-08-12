@@ -12,10 +12,9 @@ export const metadata: Metadata = {
   title: 'BIYA - Boutique de Mode',
   description: 'Decouvrez notre collection de vetements tendance',
   verification: {
-    google: '8UtONa8KQR74E4GVlwgvBYu5ncjasVlrfNzA',
+    google: '2MMqJrnIw3rBz3C1lWqR76x6tKMcSY5U6kMAdZ3pUoM',
   },
 }
-
 
 export default function RootLayout({
   children,
