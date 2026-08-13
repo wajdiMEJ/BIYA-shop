@@ -9,12 +9,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const product = await prisma.product.findUnique({
     where: { slug, isActive: true },
-    include: { 
-      images: true, 
-      category: true, 
-      variants: true, 
-      reviews: { include: { user: true } }
-    },
+    include: { images: true, category: true, variants: true, reviews: true },
   })
 
   if (!product) {
@@ -30,53 +25,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     )
   }
 
-  // ✅ Sérialisation complète (plus de Date, plus de Decimal)
   const serializedProduct = {
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    description: product.description,
+    ...product,
     price: Number(product.price),
-    salePrice: product.salePrice ? Number(product.salePrice) : null,
+    salePrice: product.salePrice ? Number(product.salePrice) : null,  // ← CORRIGÉ : salePrice pas comparePrice
     saleStartDate: product.saleStartDate ? product.saleStartDate.toISOString() : null,
     saleEndDate: product.saleEndDate ? product.saleEndDate.toISOString() : null,
-    stock: product.stock,
-    sku: product.sku,
-    isActive: product.isActive,
-    isFeatured: product.isFeatured,
-    brand: product.brand,
-    material: product.material,
-    careInstructions: product.careInstructions,
     weight: product.weight ? Number(product.weight) : null,
-    categoryId: product.categoryId,
-    createdAt: product.createdAt.toISOString(),
-    updatedAt: product.updatedAt.toISOString(),
-    images: product.images.map(img => ({
-      id: img.id,
-      url: img.url,
-      alt: img.alt,
-      isPrimary: img.isPrimary,
-      sortOrder: img.sortOrder,
-    })),
-    variants: product.variants.map(v => ({
-      id: v.id,
-      size: v.size,
-      color: v.color,
-      stock: v.stock,
-      sku: v.sku,
-      isActive: v.isActive,
-    })),
-    category: product.category ? {
-      id: product.category.id,
-      name: product.category.name,
-      slug: product.category.slug,
-    } : null,
-    reviews: product.reviews.map(r => ({
-      id: r.id,
-      rating: r.rating,
-      comment: r.comment,
-      createdAt: r.createdAt.toISOString(),
-    })),
   }
 
   return (
