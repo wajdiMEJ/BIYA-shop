@@ -3,6 +3,9 @@ import { authOptions } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 
+// ✅ Force le rendu dynamique pour éviter "headers outside request scope"
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({
   children,
 }: {
@@ -47,10 +50,10 @@ export default async function AdminLayout({
                 </Link>
               </li>
               <li className="mb-3">
-  <Link href="/admin/banners" style={{ color: '#EEE6D8', textDecoration: 'none' }}>
-    🖼️ Bannières
-  </Link>
-</li>
+                <Link href="/admin/banners" style={{ color: '#EEE6D8', textDecoration: 'none' }}>
+                  🖼️ Bannières
+                </Link>
+              </li>
               <li className="mb-3">
                 <Link href="/" style={{ color: '#B8895A', textDecoration: 'none' }}>
                   🏠 Voir le site

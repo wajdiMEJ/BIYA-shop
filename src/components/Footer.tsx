@@ -1,43 +1,43 @@
-import Link from 'next/link'
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth/auth"
-import LogoutButton from "@/components/LogoutButton"
+'use client'
 
-export default async function Footer() {
-  const session = await getServerSession(authOptions)
-  const isAdmin = session?.user?.role === "ADMIN"
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+
+export default function Footer() {
+  const { data: session } = useSession()
 
   return (
-    <footer className="bg-dark" id="tempaltemo_footer" style={{ backgroundColor: '#3E3125' }}>
+    <footer className="bg-dark" id="tempaltemo_footer">
       <div className="container">
         <div className="row">
           <div className="col-md-4 pt-5">
-            <h2 className="h2 border-bottom pb-3 border-light logo" style={{ color: '#B8895A' }}>BIYA</h2>
+            <h2 className="h2 text-success border-bottom pb-3 border-light logo">BIYA Shop</h2>
             <ul className="list-unstyled text-light footer-link-list">
-              <li><i className="fas fa-map-marker-alt fa-fw"></i> Grombalia,Nabeul</li>
-              <li><i className="fa fa-phone fa-fw"></i> <a className="text-decoration-none" href="tel:27055521" style={{ color: '#EEE6D8' }}>27055521</a></li>
-              <li><i className="fa fa-envelope fa-fw"></i> <a className="text-decoration-none" href="mailto:info@biya.com" style={{ color: '#EEE6D8' }}>BiYaShop4you@gmail.com</a></li>
+              <li><i className="fas fa-map-marker-alt fa-fw"></i> Tunis, Tunisie</li>
+              <li><i className="fa fa-phone fa-fw"></i> <a className="text-decoration-none" href="tel:27055521">27 055 521</a></li>
+              <li><i className="fa fa-envelope fa-fw"></i> <a className="text-decoration-none" href="mailto:BiYaShop4you@gmail.com">BiYaShop4you@gmail.com</a></li>
             </ul>
           </div>
+
           <div className="col-md-4 pt-5">
             <h2 className="h2 text-light border-bottom pb-3 border-light">Produits</h2>
             <ul className="list-unstyled text-light footer-link-list">
-              <li><Link className="text-decoration-none" href="/produits" style={{ color: '#EEE6D8' }}>T-shirt</Link></li>
-              <li><Link className="text-decoration-none" href="/produits" style={{ color: '#EEE6D8' }}>Robe</Link></li>
-              <li><Link className="text-decoration-none" href="/produits" style={{ color: '#EEE6D8' }}>Top</Link></li>
-              <li><Link className="text-decoration-none" href="/produits" style={{ color: '#EEE6D8' }}>Pantalon</Link></li>
+              <li><Link className="text-decoration-none" href="/produits?category=pull">Pull</Link></li>
+              <li><Link className="text-decoration-none" href="/produits?category=top">Top</Link></li>
+              <li><Link className="text-decoration-none" href="/produits?category=pantalon">Pantalon</Link></li>
+              <li><Link className="text-decoration-none" href="/produits?category=t-shirt">T-shirt</Link></li>
+              <li><Link className="text-decoration-none" href="/produits?category=veste">Veste</Link></li>
+              <li><Link className="text-decoration-none" href="/produits?category=sacs">Sacs</Link></li>
             </ul>
           </div>
+
           <div className="col-md-4 pt-5">
-            <h2 className="h2 text-light border-bottom pb-3 border-light">Mon Compte</h2>
+            <h2 className="h2 text-light border-bottom pb-3 border-light">Info</h2>
             <ul className="list-unstyled text-light footer-link-list">
-              {isAdmin && (
-                <li><Link className="text-decoration-none" href="/admin" style={{ color: '#EEE6D8' }}>🛠️ Retour à l'admin</Link></li>
-              )}
-              {session ? (
-                <li><LogoutButton /></li>
-              ) : (
-                <li><Link className="text-decoration-none" href="/login" style={{ color: '#EEE6D8' }}>🔑 Se connecter</Link></li>
+              <li><Link className="text-decoration-none" href="/">Accueil</Link></li>
+              <li><Link className="text-decoration-none" href="/produits">Tous les produits</Link></li>
+              {session?.user?.role === 'ADMIN' && (
+                <li><Link className="text-decoration-none" href="/admin">Admin</Link></li>
               )}
             </ul>
           </div>
@@ -60,13 +60,11 @@ export default async function Footer() {
         </div>
       </div>
 
-      <div className="w-100 py-3" style={{ backgroundColor: '#2a2018' }}>
+      <div className="w-100 bg-black py-3">
         <div className="container">
           <div className="row pt-2">
             <div className="col-12">
-              <p className="text-left text-light">
-                Copyright &copy; 2026 BIYA | Tous droits réservés
-              </p>
+              <p className="text-left text-light">Copyright &copy; 2026 BIYA Shop</p>
             </div>
           </div>
         </div>
