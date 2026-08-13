@@ -1,104 +1,95 @@
-import { prisma } from "@/lib/db/prisma"
-import { redirect } from "next/navigation"
-import Link from "next/link"
-import cloudinary from "@/lib/cloudinary"
+'use client'
 
-export default async function NewProductPage() {
-  const categories = await prisma.category.findMany()
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+export default function NewProductPage({ categories }: { categories: any[] }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const now = new Date()
   const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
 
-  async function createProduct(formData: FormData) {
-    'use server'
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
 
-    const name = formData.get('name') as string
-    const slug = formData.get('slug') as string
-    const description = formData.get('description') as string
-    const price = parseFloat(formData.get('price') as string)
-    const discountPercentRaw = formData.get('discountPercent') as string
-    const discountPercent = discountPercentRaw && discountPercentRaw.trim() !== '' ? parseFloat(discountPercentRaw) : 0
-    const salePrice = discountPercent > 0 ? price * (1 - discountPercent / 100) : null
+    try {
+      const form = e.currentTarget
+      const formData = new FormData(form)
 
-    const saleStartRaw = formData.get('saleStartDate') as string
-    const saleEndRaw = formData.get('saleEndDate') as string
+      const name = formData.get('name') as string
+      const slug = formData.get('slug') as string
+      const description = formData.get('description') as string
+      const price = parseFloat(formData.get('price') as string)
+      const discountPercentRaw = formData.get('discountPercent') as string
+      const discountPercent = discountPercentRaw && discountPercentRaw.trim() !== '' ? parseFloat(discountPercentRaw) : 0
+      const salePrice = discountPercent > 0 ? price * (1 - discountPercent / 100) : null
 
-    let saleStartDate: Date | null = null
-    let saleEndDate: Date | null = null
+      const saleStartRaw = formData.get('saleStartDate') as string
+      const saleEndRaw = formData.get('saleEndDate') as string
 
-    if (discountPercent > 0) {
-      const nowCheck = new Date()
+      let saleStartDate = null
+      let saleEndDate = null
 
-      if (saleStartRaw) {
-        const start = new Date(saleStartRaw)
-        if (start < nowCheck) {
-          throw new Error("La date de début de la promo ne peut pas être dans le passé")
+      if (discountPercent > 0) {
+        const nowCheck = new Date()
+        if (saleStartRaw) {
+          const start = new Date(saleStartRaw)
+          if (start < nowCheck) throw new Error("La date de début ne peut pas être dans le passé")
+          saleStartDate = start.toISOString()
         }
-        saleStartDate = start
+        if (saleEndRaw) {
+          const end = new Date(saleEndRaw)
+          if (end < nowCheck) throw new Error("La date de fin ne peut pas être dans le passé")
+          if (saleStartDate && end <= new Date(saleStartDate)) throw new Error("La date de fin doit être après la date de début")
+          saleEndDate = end.toISOString()
+        }
       }
 
-      if (saleEndRaw) {
-        const end = new Date(saleEndRaw)
-        if (end < nowCheck) {
-          throw new Error("La date de fin de la promo ne peut pas être dans le passé")
+      const categoryId = formData.get('categoryId') as string
+      const sku = formData.get('sku') as string
+
+      const sizes = ['XS', 'S', 'M', 'L', 'XL']
+      const variants = sizes.map(size => ({
+        size,
+        stock: parseInt(formData.get(`stock_${size}`) as string) || 0,
+        sku: `${sku}-${size}`,
+        color: 'Standard'
+      }))
+
+      // 1. Upload images via ton API /api/upload
+      const files = formData.getAll('images') as File[]
+      const imageUrls: string[] = []
+
+      for (const file of files) {
+        if (file.size === 0) continue
+        const uploadData = new FormData()
+        uploadData.append('file', file)
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadData,
+        })
+
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(`Erreur upload image: ${err.error || 'Inconnue'}`)
         }
-        if (saleStartDate && end <= saleStartDate) {
-          throw new Error("La date de fin doit être après la date de début")
-        }
-        saleEndDate = end
+
+        const data = await res.json()
+        imageUrls.push(data.url)
       }
-    }
 
-    const categoryId = formData.get('categoryId') as string
-    const sku = formData.get('sku') as string
+      if (imageUrls.length === 0) {
+        imageUrls.push('/assets/img/placeholder.jpg')
+      }
 
-    const sizes = ['XS', 'S', 'M', 'L', 'XL']
-    const variants = sizes.map(size => ({
-      size,
-      stock: parseInt(formData.get(`stock_${size}`) as string) || 0,
-      sku: `${sku}-${size}`,
-      color: 'Standard'
-    }))
-
-    // ✅ UPLOAD CLOUDINARY (utilise ton export existant)
-    const files = formData.getAll('images') as File[]
-    const imageUrls: { url: string; isPrimary: boolean; alt: string; sortOrder: number }[] = []
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      if (file.size === 0) continue
-
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      const base64 = buffer.toString('base64')
-      const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`
-
-      const result = await cloudinary.uploader.upload(dataUri, {
-        folder: 'biya-shop/products',
-        public_id: `${Date.now()}-${file.name.replace(/\s/g, '-').replace(/\.[^/.]+$/, '')}`,
-      })
-
-      imageUrls.push({
-        url: result.secure_url,
-        isPrimary: i === 0,
-        alt: name,
-        sortOrder: i
-      })
-    }
-
-    if (imageUrls.length === 0) {
-      imageUrls.push({
-        url: '/assets/img/placeholder.jpg',
-        isPrimary: true,
-        alt: name,
-        sortOrder: 0
-      })
-    }
-
-    const totalStock = variants.reduce((sum, v) => sum + v.stock, 0)
-
-    await prisma.product.create({
-      data: {
+      // 2. Créer le produit
+      const productData = {
         name,
         slug,
         description,
@@ -106,31 +97,44 @@ export default async function NewProductPage() {
         salePrice,
         saleStartDate,
         saleEndDate,
-        stock: totalStock,
+        stock: variants.reduce((sum, v) => sum + v.stock, 0),
         sku,
         categoryId,
-        isActive: true,
-        images: { create: imageUrls },
-        variants: {
-          create: variants.filter(v => v.stock >= 0).map(v => ({
-            size: v.size,
-            color: v.color,
-            stock: v.stock,
-            sku: v.sku,
-            isActive: true
-          }))
-        }
+        imageUrls,
+        variants: variants.filter(v => v.stock >= 0),
       }
-    })
 
-    redirect('/admin/produits')
+      const res = await fetch('/api/produits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Erreur création produit')
+      }
+
+      router.push('/admin/produits')
+      router.refresh()
+
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || 'Une erreur est survenue')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div>
       <h3 className="mb-4 fw-bold" style={{ color: '#3E3125' }}>➕ Ajouter un nouveau produit</h3>
 
-      <form action={createProduct} className="card p-4" style={{ backgroundColor: '#F8F5EF', borderColor: '#D8CBB8' }}>
+      {error && (
+        <div className="alert alert-danger mb-3">{error}</div>
+      )}
+
+      <form onSubmit={handleSubmit} className="card p-4" style={{ backgroundColor: '#F8F5EF', borderColor: '#D8CBB8' }}>
         <div className="row">
           <div className="col-md-6 mb-3">
             <label className="form-label fw-bold">Nom du produit *</label>
@@ -151,11 +155,9 @@ export default async function NewProductPage() {
           </div>
 
           <div className="col-md-4 mb-3">
-            <label className="form-label fw-bold">
-              Réduction (%) <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- promo</span>
-            </label>
+            <label className="form-label fw-bold">Réduction (%) <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- promo</span></label>
             <input name="discountPercent" type="number" step="1" min="0" max="99" className="form-control" 
-              placeholder="Ex: 15 pour -15%"
+              placeholder="Ex: 15"
               style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }} />
           </div>
 
@@ -166,17 +168,13 @@ export default async function NewProductPage() {
           </div>
 
           <div className="col-md-6 mb-3">
-            <label className="form-label fw-bold">
-              Début de la promo <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- optionnel</span>
-            </label>
+            <label className="form-label fw-bold">Début de la promo <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- optionnel</span></label>
             <input name="saleStartDate" type="datetime-local" min={nowLocal} className="form-control" 
               style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }} />
           </div>
 
           <div className="col-md-6 mb-3">
-            <label className="form-label fw-bold">
-              Fin de la promo <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- optionnel</span>
-            </label>
+            <label className="form-label fw-bold">Fin de la promo <span className="fw-normal" style={{ fontSize: 12, color: '#6F4E37' }}>- optionnel</span></label>
             <input name="saleEndDate" type="datetime-local" min={nowLocal} className="form-control" 
               style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }} />
           </div>
@@ -186,7 +184,7 @@ export default async function NewProductPage() {
             <select name="categoryId" className="form-control" required 
               style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }}>
               <option value="">Choisir...</option>
-              {categories.map((cat) => (
+              {categories.map((cat: any) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
@@ -205,14 +203,9 @@ export default async function NewProductPage() {
               {['XS', 'S', 'M', 'L', 'XL'].map((size) => (
                 <div className="col" key={size}>
                   <label className="form-label text-center w-100 fw-bold" style={{ color: '#6F4E37' }}>Taille {size}</label>
-                  <input 
-                    name={`stock_${size}`} 
-                    type="number" 
-                    min="0" 
-                    defaultValue="0"
+                  <input name={`stock_${size}`} type="number" min="0" defaultValue="0"
                     className="form-control text-center fw-bold" 
-                    style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }} 
-                  />
+                    style={{ backgroundColor: '#EEE6D8', borderColor: '#D8CBB8', color: '#3E3125' }} />
                 </div>
               ))}
             </div>
@@ -227,8 +220,9 @@ export default async function NewProductPage() {
         </div>
 
         <div className="d-flex gap-2">
-          <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#6F4E37', color: '#F8F5EF' }}>
-            💾 Enregistrer le produit
+          <button type="submit" disabled={loading} className="btn fw-bold" 
+            style={{ backgroundColor: '#6F4E37', color: '#F8F5EF' }}>
+            {loading ? '⏳ Enregistrement...' : '💾 Enregistrer le produit'}
           </button>
           <Link href="/admin/produits" className="btn fw-bold" style={{ backgroundColor: '#D8CBB8', color: '#3E3125' }}>
             Annuler
