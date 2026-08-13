@@ -14,7 +14,7 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (item: Omit<CartItem, 'quantity'> & { quantity: number }) => void
+  addItem: (item: CartItem) => void
   removeItem: (id: string, size: string) => void
   updateQuantity: (id: string, size: string, quantity: number) => void
   clearCart: () => void
@@ -58,7 +58,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = (id: string, size: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(id, size)
+      setItems(prev => prev.filter(i => !(i.id === id && i.size === size)))
       return
     }
     setItems(prev => prev.map(i => 
