@@ -1,80 +1,118 @@
-import { prisma } from "@/lib/db/prisma"
-import { NextResponse } from "next/server"
-import { notifyNewProduct } from "@/lib/email"
-import { z } from "zod"
+import { prisma } from '@/lib/db/prisma'
+import { NextResponse } from 'next/server'
 
-const productSchema = z.object({
-  name: z.string().min(1).max(200).trim(),
-  slug: z.string().min(1).max(200).trim(),
-  description: z.string().max(2000).optional(),
-  price: z.number().positive(),
-  salePrice: z.number().positive().optional(),
-  stock: z.number().int().min(0),
-  sku: z.string().min(1).max(100),
-  categoryId: z.string().uuid(),
-  imageUrl: z.string().url().optional(),
-})
-
-export async function POST(request: Request) {
+// ✅ GET : Récupérer un produit
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const body = await request.json()
-    const result = productSchema.safeParse(body)
+    const { id } = await params
 
-    if (!result.success) {
-      return NextResponse.json({ error: "Données invalides" }, { status: 400 })
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        images: true,
+        category: true,
+        variants: true,
+        reviews: { include: { user: true } },  // ← CORRIGÉ : plus de select name
+      },
+    })
+
+    if (!product) {
+      return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 })
     }
 
-    const data = result.data
-
-    const product = await prisma.product.create({
-      data: {
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        price: data.price,
-        salePrice: data.salePrice || null,
-        stock: data.stock,
-        sku: data.sku,
-        categoryId: data.categoryId,
-        isActive: true,
-        images: {
-          create: {
-            url: data.imageUrl || '/assets/img/placeholder.jpg',
-            isPrimary: true,
-            alt: data.name,
-          }
-        }
-      }
-    })
-
-    const users = await prisma.user.findMany({
-      where: { role: 'USER' },
-      select: { email: true }
-    })
-
-    users.forEach(user => {
-      if (user.email) {
-        notifyNewProduct(user.email, data.name).catch(console.error)
-      }
-    })
-
-    return NextResponse.json(product, { status: 201 })
-
+    return NextResponse.json(product)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Erreur création" }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur chargement' }, { status: 500 })
   }
 }
 
-export async function GET() {
+// ✅ PUT : Mettre à jour un produit
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      include: { images: true, category: true },
-      orderBy: { createdAt: 'desc' }
+    const { id } = await params
+    const body = await request.json()
+
+    const {
+      name,
+      slug,
+      description,
+      price,
+      salePrice,
+      stock,
+      sku,
+      categoryId,
+      isActive,
+      newImages,
+      variants,
+    } = body
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        slug,
+        description,
+        price,
+        salePrice: salePrice || null,
+        stock,
+        sku,
+        categoryId: categoryId || null,
+        isActive,
+      },
     })
-    return NextResponse.json(products)
+
+    if (newImages && newImages.length > 0) {
+      await prisma.productImage.createMany({
+        data: newImages.map((url: string, index: number) => ({
+          url,
+          productId: id,
+          isPrimary: index === 0,
+          alt: name,
+        })),
+      })
+    }
+
+    if (variants && variants.length > 0) {
+      await prisma.productVariant.deleteMany({ where: { productId: id } })
+      await prisma.productVariant.createMany({
+        data: variants.map((v: { size: string; stock: number }) => ({
+          size: v.size,
+          stock: v.stock,
+          productId: id,
+        })),
+      })
+    }
+
+    return NextResponse.json(updated)
   } catch (error) {
-    return NextResponse.json({ error: "Erreur chargement" }, { status: 500 })
+    console.error(error)
+    return NextResponse.json({ error: 'Erreur mise à jour' }, { status: 500 })
+  }
+}
+
+// ✅ DELETE : Supprimer un produit
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    await prisma.productImage.deleteMany({ where: { productId: id } })
+    await prisma.productVariant.deleteMany({ where: { productId: id } })
+    await prisma.orderItem.deleteMany({ where: { productId: id } })
+    await prisma.review.deleteMany({ where: { productId: id } })
+    await prisma.product.delete({ where: { id } })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Erreur suppression' }, { status: 500 })
   }
 }
