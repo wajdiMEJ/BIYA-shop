@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
+import cloudinary from "@/lib/cloudinary"
 import { revalidatePath } from "next/cache"
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -94,13 +93,11 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       }
     }
 
+    // ✅ UPLOAD CLOUDINARY (remplace writeFile)
     const files = formData.getAll('images') as File[]
     const hasNewImages = files.some(f => f.size > 0)
 
     if (hasNewImages) {
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products')
-      await mkdir(uploadDir, { recursive: true })
-
       await prisma.productImage.deleteMany({ where: { productId: id } })
 
       const imageUrls: { url: string; isPrimary: boolean; alt: string; sortOrder: number }[] = []
@@ -111,12 +108,16 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
-        const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`
-        const filepath = path.join(uploadDir, filename)
-        await writeFile(filepath, buffer)
+        const base64 = buffer.toString('base64')
+        const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`
+
+        const result = await cloudinary.uploader.upload(dataUri, {
+          folder: 'biya-shop/products',
+          public_id: `${Date.now()}-${file.name.replace(/\s/g, '-').replace(/\.[^/.]+$/, '')}`,
+        })
 
         imageUrls.push({
-          url: `/uploads/products/${filename}`,
+          url: result.secure_url,
           isPrimary: i === 0,
           alt: name,
           sortOrder: i
@@ -156,7 +157,6 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     return variant?.stock ?? 0
   }
 
-  // Formatte une date pour l'input datetime-local (format YYYY-MM-DDTHH:mm)
   const formatDateTimeForInput = (date: Date | null) => {
     if (!date) return ''
     const d = new Date(date)

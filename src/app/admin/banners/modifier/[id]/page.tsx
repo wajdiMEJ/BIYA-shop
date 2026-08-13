@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
+import cloudinary from "@/lib/cloudinary"
 import { revalidatePath } from "next/cache"
 
 export default async function EditBannerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,16 +28,17 @@ export default async function EditBannerPage({ params }: { params: Promise<{ id:
     let imageUrl = banner!.imageUrl
 
     if (file && file.size > 0) {
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'banners')
-      await mkdir(uploadDir, { recursive: true })
-
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`
-      const filepath = path.join(uploadDir, filename)
-      await writeFile(filepath, buffer)
+      const base64 = buffer.toString('base64')
+      const dataUri = `data:${file.type || 'image/jpeg'};base64,${base64}`
 
-      imageUrl = `/uploads/banners/${filename}`
+      const result = await cloudinary.uploader.upload(dataUri, {
+        folder: 'biya-shop/banners',
+        public_id: `${Date.now()}-${file.name.replace(/\s/g, '-').replace(/\.[^/.]+$/, '')}`,
+      })
+
+      imageUrl = result.secure_url
     }
 
     await prisma.banner.update({
