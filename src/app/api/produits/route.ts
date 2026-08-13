@@ -5,6 +5,9 @@ import { notifyNewProduct } from "@/lib/email"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    
+    // Debug temporaire (tu verras dans les logs Vercel)
+    console.log('📦 Données reçues:', JSON.stringify(body, null, 2))
 
     const {
       name,
@@ -21,6 +24,13 @@ export async function POST(request: Request) {
       variants,
     } = body
 
+    // ✅ FORCER le stock en nombre entier
+    const productStock = typeof stock === 'number' && !isNaN(stock) 
+      ? Math.floor(stock) 
+      : 0
+    
+    console.log('📊 Stock calculé:', productStock)
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -30,7 +40,7 @@ export async function POST(request: Request) {
         salePrice: salePrice || null,
         saleStartDate: saleStartDate ? new Date(saleStartDate) : null,
         saleEndDate: saleEndDate ? new Date(saleEndDate) : null,
-        stock,
+        stock: productStock,  // ← Entier garanti
         sku,
         categoryId,
         isActive: true,
@@ -43,10 +53,12 @@ export async function POST(request: Request) {
           }))
         },
         variants: {
-          create: variants.map((v: any) => ({
+          create: (variants || []).map((v: any) => ({
             size: v.size,
             color: v.color || 'Standard',
-            stock: v.stock,
+            stock: typeof v.stock === 'number' && !isNaN(v.stock) 
+              ? Math.floor(v.stock) 
+              : 0,  // ← Entier garanti pour chaque variante
             sku: v.sku,
             isActive: true,
           }))
@@ -54,7 +66,9 @@ export async function POST(request: Request) {
       }
     })
 
-    // 🔔 Notifier tous les clients par email
+    console.log('✅ Produit créé - ID:', product.id, '| Stock:', product.stock)
+
+    // Notifier les clients
     const users = await prisma.user.findMany({
       where: { role: 'USER' },
       select: { email: true }
@@ -69,7 +83,7 @@ export async function POST(request: Request) {
     return NextResponse.json(product, { status: 201 })
 
   } catch (error: any) {
-    console.error(error)
+    console.error('❌ Erreur création:', error)
     return NextResponse.json({ error: error.message || "Erreur création" }, { status: 500 })
   }
 }
