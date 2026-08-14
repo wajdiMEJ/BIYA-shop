@@ -1,24 +1,28 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function DeleteBannerButton({ bannerId }: { bannerId: string }) {
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
-  const handleDelete = async () => {
-    if (!confirm('Voulez-vous vraiment supprimer cette bannière ?')) return
-
+  async function handleDelete() {
+    if (!confirm('Supprimer cette bannière ?')) return
     setLoading(true)
-    const res = await fetch(`/api/banners/${bannerId}`, { method: 'DELETE' })
 
-    if (res.ok) {
-      router.refresh()
-    } else {
-      alert('Erreur lors de la suppression')
+    try {
+      const res = await fetch(`/api/admin/banners/${bannerId}`, { method: 'DELETE' })
+      if (res.ok) {
+        router.refresh()
+      } else {
+        alert('Erreur suppression')
+      }
+    } catch (e) {
+      alert('Erreur réseau')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
