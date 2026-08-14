@@ -15,7 +15,7 @@ export default async function HomePage() {
     orderBy: { createdAt: 'desc' },
   })
 
-  // ✅ RÉCUPÉRER LES BANNIÈRES DEPUIS LA BASE DE DONNÉES
+  // ✅ RÉCUPÉRER LES BANNIÈRES ACTIVES DEPUIS LA DB
   const banners = await prisma.banner.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: 'asc' },
@@ -26,7 +26,7 @@ export default async function HomePage() {
       <TopNav />
       <Header />
 
-      {/* ✅ Carousel dynamique depuis la DB */}
+      {/* ✅ Carousel dynamique */}
       <HeroCarousel banners={banners} />
 
       {/* Featured Products */}
