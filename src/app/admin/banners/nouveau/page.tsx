@@ -47,9 +47,9 @@ export default async function NewBannerPage() {
     })
 
     // ✅ REVALIDER la page d'accueil ET l'admin
-    revalidatePath('/')
-    revalidatePath('/admin/banners')
-    redirect('/admin/banners')
+    revalidatePath('/', 'layout')
+revalidatePath('/admin/banners')
+redirect('/admin/banners')
   }
 
   return (
