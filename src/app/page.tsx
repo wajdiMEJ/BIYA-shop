@@ -1,4 +1,4 @@
-﻿import TopNav from '@/components/TopNav'
+import TopNav from '@/components/TopNav'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { prisma } from '@/lib/db/prisma'
