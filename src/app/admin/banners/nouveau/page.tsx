@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import cloudinary from "@/lib/cloudinary"
+import { revalidatePath } from "next/cache"
 
 export default async function NewBannerPage() {
   async function createBanner(formData: FormData) {
@@ -45,6 +46,9 @@ export default async function NewBannerPage() {
       }
     })
 
+    // ✅ REVALIDER la page d'accueil ET l'admin
+    revalidatePath('/')
+    revalidatePath('/admin/banners')
     redirect('/admin/banners')
   }
 

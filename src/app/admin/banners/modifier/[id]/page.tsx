@@ -55,6 +55,8 @@ export default async function EditBannerPage({ params }: { params: Promise<{ id:
       }
     })
 
+    // ✅ REVALIDER la page d'accueil ET l'admin
+    revalidatePath('/')
     revalidatePath('/admin/banners')
     redirect('/admin/banners')
   }
