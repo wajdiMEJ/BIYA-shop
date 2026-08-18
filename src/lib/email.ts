@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Gmail pour l'admin
+// Gmail pour l'admin ET le client
 const gmailTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -171,7 +171,7 @@ function newProductEmailTemplate(productName: string) {
           <h3 style="color:#3E3125;margin:0;font-size:20px;">${productName}</h3>
           <p style="color:#6F4E37;margin:8px 0 0;font-size:14px;">Découvrez-le dès maintenant !</p>
         </div>
-        <a href="https://biya-shop.vercel.app/produits" style="display:inline-block;background:#6F4E37;color:#F8F5EF;padding:14px 32px;border-radius:50;text-decoration:none;font-weight:bold;font-size:15px;margin-top:8px;">
+        <a href="https://biya-shop-z7n6.vercel.app/produits" style="display:inline-block;background:#6F4E37;color:#F8F5EF;padding:14px 32px;border-radius:50;text-decoration:none;font-weight:bold;font-size:15px;margin-top:8px;">
           Voir le produit →
         </a>
       </div>
@@ -200,20 +200,20 @@ export async function sendAdminOrderNotification(data: OrderData) {
   }
 }
 
-// ✅ CLIENT : Resend
+// ✅ CLIENT : Gmail (au lieu de Resend, pour éviter la limitation "test mode")
 export async function sendCustomerConfirmation(data: OrderData) {
   try {
-    console.log('📧 [CLIENT Resend] Envoi à:', data.email)
-    const result = await resend.emails.send({
-      from: `BIYA Shop <${EMAIL_FROM}>`,
+    console.log('📧 [CLIENT Gmail] Envoi à:', data.email)
+    await gmailTransporter.sendMail({
+      from: `"BIYA Shop" <${process.env.EMAIL_USER}>`,
       to: data.email,
       replyTo: ADMIN_EMAIL,
       subject: `Votre commande ${data.orderNumber} est confirmée`,
       html: customerEmailTemplate(data),
     })
-    console.log('✅ [CLIENT Resend] Email envoyé:', result)
+    console.log('✅ [CLIENT Gmail] Email envoyé')
   } catch (error: any) {
-    console.error('❌ [CLIENT Resend] Erreur:', error?.message || error)
+    console.error('❌ [CLIENT Gmail] Erreur:', error?.message || error)
   }
 }
 
